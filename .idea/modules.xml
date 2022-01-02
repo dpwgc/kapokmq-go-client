@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/dpmq_client.iml" filepath="$PROJECT_DIR$/.idea/dpmq_client.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/dpmq-go-client.iml" filepath="$PROJECT_DIR$/.idea/dpmq-go-client.iml" />
     </modules>
   </component>
 </project>

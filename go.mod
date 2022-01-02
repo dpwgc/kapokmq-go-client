@@ -1,4 +1,4 @@
-module dpmq_client
+module dpmq-go-client
 
 go 1.17
 

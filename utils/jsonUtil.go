@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"dpmq_client/model"
+	"dpmq-go-client/model"
 	"encoding/json"
 )
 
