@@ -1,4 +1,4 @@
-module kapokmq-go-client
+module github.com/dpwgc/kapokmq-go-client
 
 go 1.17
 
