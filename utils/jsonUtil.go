@@ -2,7 +2,7 @@ package utils
 
 import (
 	"encoding/json"
-	"kapokmq-go-client/model"
+	"github.com/dpwgc/kapokmq-go-client/model"
 )
 
 // JsonToMessage json字符串转Message结构体
