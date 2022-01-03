@@ -2,7 +2,7 @@ package kapokmq
 
 import (
 	"fmt"
-	"kapokmq-go-client/conn"
+	"github.com/dpwgc/kapokmq-go-client/conn"
 	"time"
 )
 
