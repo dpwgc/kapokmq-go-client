@@ -1,8 +1,8 @@
 package main
 
 import (
-	"dpmq-go-client/conn"
 	"fmt"
+	"kapokmq-go-client/conn"
 	"time"
 )
 
@@ -11,7 +11,7 @@ func main() {
 	wsUrl := "ws://127.0.0.1:8011" //消息队列WebSocket连接路径
 	topic := "test_topic"          //消费者所属主题
 	consumerId := "1"              //消费者Id
-	secretKey := "dpmq"            //访问密钥
+	secretKey := "test"            //访问密钥
 
 	//消费者与消息队列建立连接
 	err := conn.NewConsumerConn(wsUrl, topic, consumerId, secretKey)
@@ -33,7 +33,11 @@ func main() {
 
 	producerConfig()
 
-	conn.ProducerSend("Hello World DPMQ 你好世界")
+	for i := 0; i < 10000; i++ {
+		go func() {
+			conn.ProducerSend("Hello World 你好世界")
+		}()
+	}
 
 	for {
 		time.Sleep(time.Second * 3)
@@ -45,7 +49,7 @@ func producerConfig() {
 	wsUrl := "ws://127.0.0.1:8011" //消息队列WebSocket连接路径
 	topic := "test_topic"          //生产者所属主题
 	producerId := "1"              //生产者Id
-	secretKey := "dpmq"            //访问密钥
+	secretKey := "test"            //访问密钥
 
 	//生产者与消息队列建立连接
 	err := conn.NewProducerConn(wsUrl, topic, producerId, secretKey)

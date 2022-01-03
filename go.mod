@@ -1,4 +1,4 @@
-module dpmq-go-client
+module kapokmq-go-client
 
 go 1.17
 

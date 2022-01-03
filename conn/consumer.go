@@ -1,10 +1,10 @@
 package conn
 
 import (
-	"dpmq-go-client/model"
-	"dpmq-go-client/utils"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"kapokmq-go-client/model"
+	"kapokmq-go-client/utils"
 )
 
 var consumerConn *websocket.Conn

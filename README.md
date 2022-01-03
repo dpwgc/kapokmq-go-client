@@ -1,10 +1,14 @@
-# dpmq-go-client
+# kapokmq-go-client
 
-## DPMQ.消息队列 Golang客户端
+## KapokMQ.消息队列 Golang客户端
 
 `Golang` `Gorilla` `WebSocket` `MQ`
 
-#### DPMQ.消息队列：https://github.com/dpwgc/dpmq | https://gitee.com/dpwgc/dpmq
+#### KapokMQ
+
+* https://github.com/dpwgc/kapokmq
+
+* https://gitee.com/dpwgc/kapokmq
 
 ***
 
@@ -29,7 +33,7 @@
 wsUrl := "ws://127.0.0.1:8011"			//消息队列WebSocket连接路径
 topic := "test_topic"					//生产者所属主题
 producerId := "1"						//生产者Id
-secretKey := "dpmq"						//访问密钥
+secretKey := "test"						//访问密钥
 
 //生产者与消息队列建立连接
 err := conn.NewProducerConn(wsUrl,topic,producerId,secretKey)
@@ -48,7 +52,7 @@ isOk := conn.ProducerSend("Hello World")
 wsUrl := "ws://127.0.0.1:8011"	//消息队列WebSocket连接路径
 topic := "test_topic"			//消费者所属主题
 consumerId := "1"				//消费者Id
-secretKey := "dpmq"				//访问密钥
+secretKey := "test"				//访问密钥
 
 //消费者与消息队列建立连接
 err := conn.NewConsumerConn(wsUrl,topic,consumerId,secretKey)
