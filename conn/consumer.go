@@ -2,9 +2,9 @@ package conn
 
 import (
 	"fmt"
+	"github.com/dpwgc/kapokmq-go-client/model"
+	"github.com/dpwgc/kapokmq-go-client/utils"
 	"github.com/gorilla/websocket"
-	"kapokmq-go-client/model"
-	"kapokmq-go-client/utils"
 )
 
 var consumerConn *websocket.Conn
