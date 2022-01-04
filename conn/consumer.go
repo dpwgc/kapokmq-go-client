@@ -5,15 +5,17 @@ import (
 	"github.com/dpwgc/kapokmq-go-client/model"
 	"github.com/dpwgc/kapokmq-go-client/utils"
 	"github.com/gorilla/websocket"
+	"log"
 )
 
 var consumerConn *websocket.Conn
 
+//接收消息的通道
 var receiveChan = make(chan model.Message)
 
 // NewConsumerConn 创建一个消费者连接
 func NewConsumerConn(url string, topic string, consumerId string, secretKey string) error {
-	wsUrl := fmt.Sprintf("%s%s%s/%s", url, "/Consumers/Conn/", topic, consumerId)
+	wsUrl := fmt.Sprintf("ws://%s%s%s/%s", url, "/Consumers/Conn/", topic, consumerId)
 	client, _, err := websocket.DefaultDialer.Dial(wsUrl, nil)
 	if err != nil {
 		return err
@@ -31,17 +33,20 @@ func consumerReceiveHandle(secretKey string) {
 	for {
 		messageType, message, err := consumerConn.ReadMessage()
 		if err != nil {
-			continue
+			log.Fatal(err)
+			return
 		}
 		if messageType != 1 {
-			continue
+			log.Fatal("messageType != 1")
+			return
 		}
 
 		if string(message) == "Please enter the secret key" {
 
 			err = consumerConn.WriteMessage(1, []byte(secretKey))
 			if err != nil {
-				continue
+				log.Fatal(err)
+				return
 			}
 		}
 
@@ -57,16 +62,19 @@ func consumerReceiveHandle(secretKey string) {
 	for {
 		messageType, message, err := consumerConn.ReadMessage()
 		if err != nil {
-			continue
+			log.Fatal(err)
+			return
 		}
 		if messageType != 1 {
-			continue
+			log.Fatal("messageType != 1")
+			return
 		}
 
 		//解析消息
 		msg, err := utils.JsonToMessage(string(message))
 		if err != nil {
-			continue
+			log.Fatal(err)
+			return
 		}
 		//将消息通过receiveChan通道发送至ConsumerReceive()函数
 		receiveChan <- msg
@@ -74,8 +82,10 @@ func consumerReceiveHandle(secretKey string) {
 }
 
 // ConsumerReceive 接收消息
-func ConsumerReceive() model.Message {
+func ConsumerReceive() (model.Message, bool) {
 	//读取receiveChan通道中的消息并返回
-	message := <-receiveChan
-	return message
+	message, isOk := <-receiveChan
+	message.Status = 1
+	message.ConsumedTime = utils.GetLocalDateTimestamp()
+	return message, isOk
 }
