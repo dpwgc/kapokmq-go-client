@@ -8,10 +8,10 @@ import (
 
 func main() {
 
-	wsUrl := "ws://127.0.0.1:8011" //消息队列WebSocket连接路径
-	topic := "test_topic"          //消费者所属主题
-	consumerId := "1"              //消费者Id
-	secretKey := "test"            //访问密钥
+	wsUrl := "127.0.0.1:8011" //消息队列服务地址
+	topic := "test_topic"     //消费者所属主题
+	consumerId := "1"         //消费者Id
+	secretKey := "test"       //访问密钥
 
 	//消费者与消息队列建立连接
 	err := conn.NewConsumerConn(wsUrl, topic, consumerId, secretKey)
@@ -23,11 +23,13 @@ func main() {
 	go func() {
 		for {
 			//接收消息队列推送过来的消息msg
-			msg := conn.ConsumerReceive()
-			fmt.Println(msg)
-			/*
-				进行相应业务处理
-			*/
+			msg, isOk := conn.ConsumerReceive()
+			if isOk {
+				fmt.Println(msg)
+				/*
+					进行相应业务处理
+				*/
+			}
 		}
 	}()
 
@@ -35,7 +37,7 @@ func main() {
 
 	for i := 0; i < 10000; i++ {
 		go func() {
-			conn.ProducerSend("Hello World 你好世界")
+			conn.ProducerSend("Hello World 你好世界", 3000)
 		}()
 	}
 
@@ -46,10 +48,10 @@ func main() {
 
 func producerConfig() {
 
-	wsUrl := "ws://127.0.0.1:8011" //消息队列WebSocket连接路径
-	topic := "test_topic"          //生产者所属主题
-	producerId := "1"              //生产者Id
-	secretKey := "test"            //访问密钥
+	wsUrl := "127.0.0.1:8011" //消息队列服务地址
+	topic := "test_topic"     //生产者所属主题
+	producerId := "1"         //生产者Id
+	secretKey := "test"       //访问密钥
 
 	//生产者与消息队列建立连接
 	err := conn.NewProducerConn(wsUrl, topic, producerId, secretKey)
