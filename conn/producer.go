@@ -64,7 +64,7 @@ func producerReceiveHandle(secretKey string) {
 	for {
 		//从sendChan通道中获取要发送给消息队列的数据
 		sendMessage := <-sendChan
-		err := producerConn.WriteMessage(sendMessage.DelayTime, []byte(sendMessage.MessageData))
+		err := producerConn.WriteJSON(sendMessage)
 		if err != nil {
 			//插入发送失败标识到resChan通道
 			resChan <- false
