@@ -77,7 +77,7 @@ func producerReceiveHandle(secretKey string) {
 }
 
 // ProducerSend 发送消息
-func ProducerSend(messageData string, delayTime int) bool {
+func ProducerSend(messageData string, delayTime int64) bool {
 	sendMessage := model.SendMessage{}
 	sendMessage.MessageData = messageData
 	sendMessage.DelayTime = delayTime

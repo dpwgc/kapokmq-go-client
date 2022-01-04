@@ -3,7 +3,7 @@ package model
 // SendMessage 生产者发送的消息模板
 type SendMessage struct {
 	MessageData string //消息内容（一般为JSON格式的字符串）
-	DelayTime   int    //延迟推送时间（单位：秒）
+	DelayTime   int64  //延迟推送时间（单位：秒）
 }
 
 // Message 消费者接收的消息模板
