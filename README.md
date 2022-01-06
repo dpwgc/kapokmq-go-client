@@ -34,7 +34,7 @@ import (
 
 ```
 //生产者连接信息
-url := "127.0.0.1:8011"         //消息队列服务地址
+url := "ws://127.0.0.1:8011"    //消息队列服务地址
 topic := "test_topic"           //生产者所属主题
 producerId := "1"               //生产者Id
 secretKey := "test"             //访问密钥
@@ -71,7 +71,7 @@ import (
 
 ```
 //消费者连接信息
-url := "127.0.0.1:8011"         //消息队列服务地址
+url := "ws://127.0.0.1:8011"    //消息队列服务地址
 topic := "test_topic"           //消费者所属主题
 consumerId := "1"               //消费者Id
 secretKey := "test"             //访问密钥

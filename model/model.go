@@ -16,3 +16,10 @@ type Message struct {
 	ConsumedTime int64  //消息被消费时间
 	Status       int    //消息状态（-1：刚进入队列,无状态。0：消费失败。1：已被消费）
 }
+
+// Node 消息队列服务节点结构体
+type Node struct {
+	Name string
+	Addr string
+	Port string
+}

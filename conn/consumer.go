@@ -14,8 +14,8 @@ var consumerConn *websocket.Conn
 var receiveChan = make(chan model.Message)
 
 // NewConsumerConn 创建一个消费者连接
-func NewConsumerConn(url string, topic string, consumerId string, secretKey string) error {
-	wsUrl := fmt.Sprintf("ws://%s%s%s/%s", url, "/Consumers/Conn/", topic, consumerId)
+func NewConsumerConn(protocol string, url string, topic string, consumerId string, secretKey string) error {
+	wsUrl := fmt.Sprintf("%s://%s%s%s/%s", protocol, url, "/Consumers/Conn/", topic, consumerId)
 	client, _, err := websocket.DefaultDialer.Dial(wsUrl, nil)
 	if err != nil {
 		return err

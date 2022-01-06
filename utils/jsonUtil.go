@@ -14,3 +14,13 @@ func JsonToMessage(jsonStr string) (model.Message, error) {
 	}
 	return m, nil
 }
+
+// JsonToNode json字符串转Node结构体
+func JsonToNode(jsonStr string) ([]model.Node, error) {
+	var n []model.Node
+	err := json.Unmarshal([]byte(jsonStr), &n)
+	if err != nil {
+		return n, err
+	}
+	return n, nil
+}
