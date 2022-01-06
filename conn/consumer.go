@@ -2,36 +2,54 @@ package conn
 
 import (
 	"fmt"
+	"github.com/dpwgc/kapokmq-go-client/conf"
 	"github.com/dpwgc/kapokmq-go-client/model"
 	"github.com/dpwgc/kapokmq-go-client/utils"
 	"github.com/gorilla/websocket"
 	"log"
+	"time"
 )
 
-var consumerConn *websocket.Conn
+//消费者连接列表
+var consumerConn = make(map[*websocket.Conn]string)
 
 //接收消息的通道
 var receiveChan = make(chan model.Message)
 
 // NewConsumerConn 创建一个消费者连接
-func NewConsumerConn(protocol string, url string, topic string, consumerId string, secretKey string) error {
-	wsUrl := fmt.Sprintf("%s://%s%s%s/%s", protocol, url, "/Consumers/Conn/", topic, consumerId)
+func NewConsumerConn(consumer conf.Consumer) error {
+	wsUrl := fmt.Sprintf("%s://%s:%s%s%s/%s", consumer.MqProtocol, consumer.MqAddr, consumer.MqPort, "/Consumers/Conn/", consumer.Topic, consumer.ConsumerId)
 	client, _, err := websocket.DefaultDialer.Dial(wsUrl, nil)
 	if err != nil {
 		return err
 	}
-	consumerConn = client
-	go consumerReceiveHandle(secretKey)
+
+	consumerConn[client] = wsUrl
+	go consumerReceiveHandle(consumer.SecretKey, client)
+
+	go func() {
+		for {
+			checkConsumer(consumer)
+			time.Sleep(time.Second * time.Duration(3))
+		}
+	}()
 	return nil
 }
 
 // receiveHandle 消息接收句柄
-func consumerReceiveHandle(secretKey string) {
-	defer consumerConn.Close()
+func consumerReceiveHandle(secretKey string, client *websocket.Conn) {
+	defer func(client *websocket.Conn) {
+		//删除该消费者连接记录
+		delete(consumerConn, client)
+		err := client.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(client)
 
 	//验证密钥
 	for {
-		messageType, message, err := consumerConn.ReadMessage()
+		messageType, message, err := client.ReadMessage()
 		if err != nil {
 			log.Fatal(err)
 			return
@@ -43,7 +61,7 @@ func consumerReceiveHandle(secretKey string) {
 
 		if string(message) == "Please enter the secret key" {
 
-			err = consumerConn.WriteMessage(1, []byte(secretKey))
+			err = client.WriteMessage(1, []byte(secretKey))
 			if err != nil {
 				log.Fatal(err)
 				return
@@ -60,7 +78,7 @@ func consumerReceiveHandle(secretKey string) {
 
 	//开始监听数据
 	for {
-		messageType, message, err := consumerConn.ReadMessage()
+		messageType, message, err := client.ReadMessage()
 		if err != nil {
 			log.Fatal(err)
 			return
@@ -79,6 +97,36 @@ func consumerReceiveHandle(secretKey string) {
 		//将消息通过receiveChan通道发送至ConsumerReceive()函数
 		receiveChan <- msg
 	}
+}
+
+//检查者检查与重连
+func checkConsumer(consumer conf.Consumer) {
+	flag := true
+	wsUrl := fmt.Sprintf("%s://%s:%s%s%s/%s", consumer.MqProtocol, consumer.MqAddr, consumer.MqPort, "/Consumers/Conn/", consumer.Topic, consumer.ConsumerId)
+
+	//检查该连接是否断开
+	for _, v := range consumerConn {
+		//如果该连接未断开
+		if wsUrl == v {
+			//跳过
+			flag = false
+			break
+		}
+	}
+	if flag == false {
+		//结束本次检查
+		return
+	}
+
+	//如果该连接已断开，则重新建立连接
+	client, _, err := websocket.DefaultDialer.Dial(wsUrl, nil)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	producerConn[client] = wsUrl
+	//重新开启连接协程
+	go consumerReceiveHandle(consumer.SecretKey, client)
 }
 
 // ConsumerReceive 接收消息

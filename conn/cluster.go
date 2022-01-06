@@ -7,7 +7,7 @@ import (
 )
 
 // GetNodes 获取消息队列服务节点列表
-func GetNodes(protocol string, url string, secretKey string) ([]model.Node, error) {
+func GetNodes(protocol string, addr string, port string, secretKey string) ([]model.Node, error) {
 
 	var nodes []model.Node
 
@@ -17,7 +17,7 @@ func GetNodes(protocol string, url string, secretKey string) ([]model.Node, erro
 	header["secretKey"] = secretKey
 
 	//向注册中心请求数据
-	url = fmt.Sprintf("%s://%s%s", protocol, url, "/Registry/GetNodes")
+	url := fmt.Sprintf("%s://%s:%s%s", protocol, addr, port, "/Registry/GetNodes")
 	res, err := utils.PostForm(url, header, nil)
 	if err != nil {
 		return nodes, err

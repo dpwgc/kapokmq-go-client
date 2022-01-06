@@ -2,20 +2,24 @@ package main
 
 import (
 	"fmt"
+	"github.com/dpwgc/kapokmq-go-client/conf"
 	"github.com/dpwgc/kapokmq-go-client/conn"
 	"time"
 )
 
 func main() {
 
-	wsUrl := "127.0.0.1:8011" //消息队列WebSocket连接路径
-	topic := "test_topic"     //消费者所属主题
-	consumerId := "1"         //消费者Id
-	secretKey := "test"       //访问密钥
-	protocol := "ws"          //网络协议：ws/wss
+	consumer := conf.Consumer{
+		MqAddr:     "0.0.0.0",
+		MqPort:     "8011",
+		MqProtocol: "ws",
+		Topic:      "test_topic",
+		ConsumerId: "1",
+		SecretKey:  "test",
+	}
 
 	//消费者与消息队列建立连接
-	err := conn.NewConsumerConn(protocol, wsUrl, topic, consumerId, secretKey)
+	err := conn.NewConsumerConn(consumer)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -80,27 +84,52 @@ func main() {
 
 func producerConfig() {
 
-	topic := "test_topic" //生产者所属主题
-	producerId := "1"     //生产者Id
-	secretKey := "test"   //访问密钥
-	protocol := "ws"      //网络协议：ws/wss
+	/*
+		producer := conf.Producer{
+			MqAddr:"0.0.0.0",
+			MqPort: "8011",
+			MqProtocol: "ws",
+			Topic: "test_topic",
+			ProducerId: "1",
+			SecretKey: "test",
+		}
 
-	url := "127.0.0.1:8030"
+		//生产者与消息队列建立连接
+		err := conn.NewProducerConn(producer)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 
-	nodes, err := conn.GetNodes("http", url, secretKey)
-	fmt.Println(nodes)
-	if err != nil {
-		fmt.Println(err)
+		for i := 0; i < 100; i++ {
+			go func() {
+				conn.ProducerSend("ok", 0)
+			}()
+		}
+
+		for {
+			time.Sleep(time.Second * 5)
+		}
+	*/
+
+	producer := conf.ClusterProducer{
+		RegistryAddr:     "0.0.0.0",
+		RegistryPort:     "8030",
+		RegistryProtocol: "http",
+		MqProtocol:       "ws",
+		Topic:            "test_topic",
+		ProducerId:       "1",
+		SecretKey:        "test",
 	}
 
 	//生产者与消息队列建立连接
-	err = conn.NewClusterProducerConn(protocol, nodes, topic, producerId, secretKey)
+	err := conn.NewClusterProducerConn(producer)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	for i := 0; i < 10000; i++ {
+	for i := 0; i < 100; i++ {
 		go func() {
 			conn.ProducerSend("ok", 0)
 		}()
