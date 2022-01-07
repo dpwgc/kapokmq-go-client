@@ -10,17 +10,16 @@
 
 * https://gitee.com/dpwgc/kapokmq
 
-### Serena.注册中心
-
-* https://github.com/dpwgc/serena
-
-* https://gitee.com/dpwgc/serena
-
 ***
 
 ### 使用方法
 
 * 引入包：`go get github.com/dpwgc/kapokmq-go-client`
+```
+注：单个Golang项目内：
+只能存在一个NewProducerConn()/NewClusterProducerConn和一个NewConsumerConn()。
+即只能有一个单机生产者连接(或集群生产者连接)和一个消费者连接。
+```
 
 #### 单机模式下的生产者客户端
 
@@ -81,13 +80,13 @@ import (
 
 ```
 producer := conf.ClusterProducer{
-	RegistryAddr:     "0.0.0.0",
-	RegistryPort:     "8031",
-	RegistryProtocol: "http",
-	MqProtocol:       "ws",
-	Topic:            "test_topic",
-	ProducerId:       "1",
-	SecretKey:        "test",
+	RegistryAddr:     "0.0.0.0",    //注册中心的IP地址
+	RegistryPort:     "8031",       //注册中心的Gin HTTP服务端口号
+	RegistryProtocol: "http",       //注册中心的连接协议：http/https
+	MqProtocol:       "ws",         //消息队列的连接协议：ws/wss
+	Topic:            "test_topic", //生产者订阅的主题
+	ProducerId:       "1",          //生产者Id
+	SecretKey:        "test",       //消息队列访问密钥
 }
 
 //生产者与消息队列建立连接
@@ -153,6 +152,14 @@ go func() {
 ***
 
 ### 主要模块
+
+##### 配置模板 `conf/conf.go`
+
+* 生产者/消费者客户端的配置模板
+
+##### 集群相关 `conn/cluster.go`
+
+* 向注册中心获取集群内的消息队列节点列表
 
 ##### 生产者消息发送 `conn/producer.go`
 
