@@ -4,11 +4,17 @@
 
 `Golang` `Gorilla` `WebSocket` `MQ`
 
-### KapokMQ
+### KapokMQ.消息队列
 
 * https://github.com/dpwgc/kapokmq
 
 * https://gitee.com/dpwgc/kapokmq
+
+### Serena.注册中心
+
+* https://github.com/dpwgc/serena
+
+* https://gitee.com/dpwgc/serena
 
 ***
 
@@ -16,7 +22,7 @@
 
 * 引入包：`go get github.com/dpwgc/kapokmq-go-client`
 
-#### 生产者客户端
+#### 单机模式下的生产者客户端
 
 * 生产者客户端先通过WebSocket连接到消息队列，再进行消息发送操作。
 
@@ -33,24 +39,66 @@ import (
 ```
 
 ```
-//生产者连接信息
-url := "ws://127.0.0.1:8011"    //消息队列服务地址
-topic := "test_topic"           //生产者所属主题
-producerId := "1"               //生产者Id
-secretKey := "test"             //访问密钥
+//创建生产者模板
+producer := conf.Producer{
+    MqAddr:"0.0.0.0",   //消息队列服务IP地址
+    MqPort: "8011",     //消息队列服务端口号
+    MqProtocol: "ws",   //消息队列连接协议：ws/wss
+    Topic: "test_topic",//生产者订阅的主题
+    ProducerId: "1",    //生产者Id
+    SecretKey: "test",  //消息队列访问密钥
+}
+
+//生产者与消息队列建立连接
+err := conn.NewProducerConn(producer)
+    if err != nil {
+    fmt.Println(err)
+    return
+}
+
+//发送消息
+conn.ProducerSend("ok", 0)
+
+//发送延时消息（延时60秒推送到消费者客户端）
+conn.ProducerSend("ok", 60)
+```
+
+#### 集群模式下的生产者客户端
+
+* 集群生产者客户端先通过HTTP请求获取Serena注册中心上的所有消息队列节点信息，再与所有消息队列建立WebSocket连接，随机选取一个消息队列进行发送。
+
+* 创建一个集群生产者，与所有消息队列建立WebSocket连接：`NewClusterProducerConn()`
+
+* 发送一条消息（集群模式下该消息将会随机投送给集群中的一个消息队列）：`ProducerSend()`
+
+```
+//导入github包
+import (
+	"fmt"
+	"github.com/dpwgc/kapokmq-go-client/conn"
+)
 ```
 
 ```
+producer := conf.ClusterProducer{
+	RegistryAddr:     "0.0.0.0",
+	RegistryPort:     "8031",
+	RegistryProtocol: "http",
+	MqProtocol:       "ws",
+	Topic:            "test_topic",
+	ProducerId:       "1",
+	SecretKey:        "test",
+}
+
 //生产者与消息队列建立连接
-err := conn.NewProducerConn(url,topic,producerId,secretKey)
+err := conn.NewClusterProducerConn(producer)
 if err != nil {
+	fmt.Println(err)
 	return
 }
-```
 
-```
-//生产者发送消息，设定3000秒后再投送给消费者客户端（isOk：判断是否发送成功 true/false）
-isOk := conn.ProducerSend("Hello World 你好世界",3000)
+//发送消息
+conn.ProducerSend("ok", 0)
 ```
 
 #### 消费者客户端
@@ -70,22 +118,22 @@ import (
 ```
 
 ```
-//消费者连接信息
-url := "ws://127.0.0.1:8011"    //消息队列服务地址
-topic := "test_topic"           //消费者所属主题
-consumerId := "1"               //消费者Id
-secretKey := "test"             //访问密钥
-```
-
-```
-//消费者与消息队列建立连接
-err := conn.NewConsumerConn(wsUrl,topic,consumerId,secretKey)
-if err != nil {
-	return 
+consumer := conf.Consumer{
+	MqAddr:     "0.0.0.0",   //消息队列服务IP地址
+	MqPort:     "8011",      //消息队列服务端口号
+	MqProtocol: "ws",        //消息队列连接协议：ws/wss
+	Topic:      "test_topic",//消费者订阅的主题
+	ConsumerId: "1",         //消费者Id   
+	SecretKey:  "test",      //消息队列访问密钥
 }
-```
 
-```
+//消费者与消息队列建立连接
+err := conn.NewConsumerConn(consumer)
+if err != nil {
+	fmt.Println(err)
+	return
+}
+
 //消费者监听消息队列
 go func() {
 	for {
