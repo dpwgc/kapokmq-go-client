@@ -4,12 +4,9 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="87b33b4b-0a0f-4beb-8189-c5e47d9c951e" name="Changes" comment="更新">
-      <change afterPath="$PROJECT_DIR$/conf/conf.go" afterDir="false" />
+    <list default="true" id="87b33b4b-0a0f-4beb-8189-c5e47d9c951e" name="Changes" comment="文档更新">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/conn/cluster.go" beforeDir="false" afterPath="$PROJECT_DIR$/conn/cluster.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/conn/consumer.go" beforeDir="false" afterPath="$PROJECT_DIR$/conn/consumer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/conn/producer.go" beforeDir="false" afterPath="$PROJECT_DIR$/conn/producer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -91,12 +88,13 @@
     <MESSAGE value="json工具包" />
     <MESSAGE value="新增延时消息" />
     <MESSAGE value="获取本地时间戳" />
-    <MESSAGE value="文档更新" />
     <MESSAGE value="测试文件" />
     <MESSAGE value="生产者接口纠错" />
     <MESSAGE value="修改生产者发送消息模板" />
     <MESSAGE value="更新" />
-    <option name="LAST_COMMIT_MESSAGE" value="更新" />
+    <MESSAGE value="生产者连接" />
+    <MESSAGE value="文档更新" />
+    <option name="LAST_COMMIT_MESSAGE" value="文档更新" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
