@@ -25,6 +25,7 @@ func NewProducerConn(producer conf.Producer) error {
 	if err != nil {
 		return err
 	}
+	//生产者连接列表添加websocket连接
 	producerConn[client] = wsUrl
 	//开启连接协程
 	go producerReceiveHandle(producer.SecretKey, client)
@@ -51,7 +52,6 @@ func NewClusterProducerConn(producer conf.ClusterProducer) error {
 		wsUrl := fmt.Sprintf("%s://%s:%s%s%s/%s", producer.MqProtocol, node.Addr, node.Port, "/Producers/Conn/", producer.Topic, producer.ProducerId)
 		client, _, err := websocket.DefaultDialer.Dial(wsUrl, nil)
 		if err != nil {
-			fmt.Println(err)
 			return err
 		}
 		producerConn[client] = wsUrl
