@@ -2,9 +2,7 @@
 
 ## KapokMQ.消息队列 Golang客户端
 
-`Golang` `Gorilla` `WebSocket` `MQ`
-
-### KapokMQ.消息队列
+### KapokMQ.消息队列源码
 
 * https://github.com/dpwgc/kapokmq
 
@@ -17,8 +15,9 @@
 * 引入包：`go get github.com/dpwgc/kapokmq-go-client`
 ```
 注：单个Golang项目内：
-只能存在一个NewProducerConn()/NewClusterProducerConn和一个NewConsumerConn()。
-即只能有一个单机生产者连接(或集群生产者连接)和一个消费者连接。
+只能存在一个NewProducerConn()或NewClusterProducerConn()。
+只能存在一个NewConsumerConn()。
+即一个项目(Gin、Beego等)中只能创建一个生产者客户端和一个消费者客户端。
 ```
 
 #### 单机模式下的生产者客户端
