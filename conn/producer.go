@@ -20,20 +20,24 @@ var resChan = make(chan bool)
 
 // NewProducerConn 创建一个生产者连接
 func NewProducerConn(producer conf.Producer) error {
+
 	wsUrl := fmt.Sprintf("%s://%s:%s%s%s/%s", producer.MqProtocol, producer.MqAddr, producer.MqPort, "/Producers/Conn/", producer.Topic, producer.ProducerId)
 	client, _, err := websocket.DefaultDialer.Dial(wsUrl, nil)
 	if err != nil {
 		return err
 	}
-	//生产者连接列表添加websocket连接
+
+	//将websocket连接添加到生产者连接列表
 	producerConn[client] = wsUrl
 	//开启连接协程
 	go producerReceiveHandle(producer.SecretKey, client)
 
+	//开启连接检查协程
 	go func() {
 		for {
 			checkProducer(producer)
-			time.Sleep(time.Second * time.Duration(3))
+			fmt.Printf("\033[1;32;40m%s\033[0m\n", "check producer")
+			time.Sleep(time.Second * time.Duration(producer.CheckTime))
 		}
 	}()
 	return nil
@@ -47,6 +51,7 @@ func NewClusterProducerConn(producer conf.ClusterProducer) error {
 	if err != nil {
 		return err
 	}
+
 	//生产者与所有消息队列节点建立websocket连接
 	for _, node := range nodes {
 		wsUrl := fmt.Sprintf("%s://%s:%s%s%s/%s", producer.MqProtocol, node.Addr, node.Port, "/Producers/Conn/", producer.Topic, producer.ProducerId)
@@ -58,12 +63,16 @@ func NewClusterProducerConn(producer conf.ClusterProducer) error {
 		//循环开启多个连接协程
 		go producerReceiveHandle(producer.SecretKey, client)
 	}
+
+	//开启连接检查协程
 	go func() {
 		for {
 			checkClusterProducer(producer)
-			time.Sleep(time.Second * time.Duration(3))
+			fmt.Printf("\033[1;32;40m%s\033[0m\n", "check cluster producer")
+			time.Sleep(time.Second * time.Duration(producer.CheckTime))
 		}
 	}()
+
 	return nil
 }
 
@@ -80,6 +89,7 @@ func producerReceiveHandle(secretKey string, client *websocket.Conn) {
 
 	//验证密钥
 	for {
+		//读取消息队列发送过来的提示
 		messageType, message, err := client.ReadMessage()
 		if err != nil {
 			log.Fatal(err)
@@ -90,8 +100,10 @@ func producerReceiveHandle(secretKey string, client *websocket.Conn) {
 			return
 		}
 
+		//请输入访问密钥
 		if string(message) == "Please enter the secret key" {
 
+			//发送密钥
 			err = client.WriteMessage(1, []byte(secretKey))
 			if err != nil {
 				log.Fatal(err)
@@ -99,9 +111,13 @@ func producerReceiveHandle(secretKey string, client *websocket.Conn) {
 			}
 		}
 
+		//访问密钥错误
 		if string(message) == "Secret key matching error" {
+			log.Fatal("Secret key matching error")
 			continue
 		}
+
+		//访问密钥正确
 		if string(message) == "Secret key matching succeeded" {
 			break
 		}
@@ -127,9 +143,10 @@ func producerReceiveHandle(secretKey string, client *websocket.Conn) {
 func checkProducer(producer conf.Producer) {
 	flag := true
 	wsUrl := fmt.Sprintf("%s://%s:%s%s%s/%s", producer.MqProtocol, producer.MqAddr, producer.MqPort, "/Producers/Conn/", producer.Topic, producer.ProducerId)
-	//检查该连接是否断开
+
+	//遍历websocket连接列表
 	for _, v := range producerConn {
-		//如果该连接未断开
+		//如果找到该连接，则表明该连接未断开
 		if wsUrl == v {
 			//跳过
 			flag = false
@@ -141,14 +158,14 @@ func checkProducer(producer conf.Producer) {
 		return
 	}
 
-	//如果该连接已断开，则重新建立连接
+	//如果连接列表中找不到该连接，则表明该连接已断开，则重新建立连接
 	client, _, err := websocket.DefaultDialer.Dial(wsUrl, nil)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 	producerConn[client] = wsUrl
-	//重新开启连接协程
+	//重新开启该连接协程
 	go producerReceiveHandle(producer.SecretKey, client)
 }
 
@@ -158,14 +175,15 @@ func checkClusterProducer(producer conf.ClusterProducer) {
 	//根据注册中心地址访问注册中心，拉取所有消息队列服务节点的信息
 	nodes, _ := GetNodes(producer.RegistryProtocol, producer.RegistryAddr, producer.RegistryPort, producer.SecretKey)
 
-	//生产者与所有消息队列节点建立websocket连接
+	//遍历消息队列节点列表
 	for _, node := range nodes {
 
 		flag := true
 		wsUrl := fmt.Sprintf("%s://%s:%s%s%s/%s", producer.MqProtocol, node.Addr, node.Port, "/Producers/Conn/", producer.Topic, producer.ProducerId)
-		//检查该连接是否断开
+
+		//遍历websocket连接列表，查找该节点的websocket连接
 		for _, v := range producerConn {
-			//如果该连接未断开
+			//如果找到该连接，则表明该连接未断开
 			if wsUrl == v {
 				//跳过
 				flag = false
@@ -173,18 +191,18 @@ func checkClusterProducer(producer conf.ClusterProducer) {
 			}
 		}
 		if flag == false {
-			//结束本次检查
-			return
+			//检查下一个节点连接
+			continue
 		}
 
-		//如果该连接已断开，则重新建立连接
+		//如果连接列表中找不到该连接，则表明该连接已断开，则重新建立连接
 		client, _, err := websocket.DefaultDialer.Dial(wsUrl, nil)
 		if err != nil {
 			log.Fatal(err)
-			return
+			continue
 		}
 		producerConn[client] = wsUrl
-		//重新开启连接协程
+		//开启该连接协程
 		go producerReceiveHandle(producer.SecretKey, client)
 	}
 }
