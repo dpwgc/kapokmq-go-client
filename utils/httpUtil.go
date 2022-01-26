@@ -2,7 +2,6 @@ package utils
 
 import (
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -30,7 +29,6 @@ func PostForm(uri string, header map[string]string, data map[string]string) (str
 
 	request, err := http.NewRequest("POST", uri, strings.NewReader(formData.Encode()))
 	if err != nil {
-		log.Fatal(err)
 		return "", err
 	}
 
@@ -46,7 +44,6 @@ func PostForm(uri string, header map[string]string, data map[string]string) (str
 
 	response, err := HttpClient.Do(request)
 	if err != nil {
-		log.Fatal(err)
 		return "", err
 	}
 
@@ -54,7 +51,6 @@ func PostForm(uri string, header map[string]string, data map[string]string) (str
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		log.Fatal(err)
 		return "", err
 	}
 
