@@ -83,20 +83,16 @@ func producerReceiveHandle(secretKey string, client *websocket.Conn) {
 		delete(producerConn, client)
 		err := client.Close()
 		if err != nil {
-			log.Fatal(err)
+			fmt.Printf("\033[1;31;40m%s\033[0m\n", err)
 		}
 	}(client)
 
 	//验证密钥
 	for {
 		//读取消息队列发送过来的提示
-		messageType, message, err := client.ReadMessage()
+		_, message, err := client.ReadMessage()
 		if err != nil {
 			log.Fatal(err)
-			return
-		}
-		if messageType != 1 {
-			log.Fatal("messageType != 1")
 			return
 		}
 
@@ -114,7 +110,6 @@ func producerReceiveHandle(secretKey string, client *websocket.Conn) {
 		//访问密钥错误
 		if string(message) == "Secret key matching error" {
 			log.Fatal("Secret key matching error")
-			continue
 		}
 
 		//访问密钥正确
@@ -129,9 +124,9 @@ func producerReceiveHandle(secretKey string, client *websocket.Conn) {
 		sendMessage := <-sendChan
 		err := client.WriteJSON(sendMessage)
 		if err != nil {
+			fmt.Printf("\033[1;31;40m%s\033[0m\n", err)
 			//插入发送失败标识到resChan通道
 			resChan <- false
-			log.Fatal(err)
 			return
 		}
 		//插入发送成功标识到resChan通道
@@ -161,7 +156,7 @@ func checkProducer(producer conf.Producer) {
 	//如果连接列表中找不到该连接，则表明该连接已断开，则重新建立连接
 	client, _, err := websocket.DefaultDialer.Dial(wsUrl, nil)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Printf("\033[1;31;40m%s\033[0m\n", err)
 		return
 	}
 	producerConn[client] = wsUrl
@@ -198,7 +193,7 @@ func checkClusterProducer(producer conf.ClusterProducer) {
 		//如果连接列表中找不到该连接，则表明该连接已断开，则重新建立连接
 		client, _, err := websocket.DefaultDialer.Dial(wsUrl, nil)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Printf("\033[1;31;40m%s\033[0m\n", err)
 			continue
 		}
 		producerConn[client] = wsUrl
