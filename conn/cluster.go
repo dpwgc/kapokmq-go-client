@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/dpwgc/kapokmq-go-client/model"
 	"github.com/dpwgc/kapokmq-go-client/utils"
+	"log"
 )
 
 // GetNodes 获取消息队列服务节点列表
@@ -23,8 +24,9 @@ func GetNodes(protocol string, addr string, port string, secretKey string) ([]mo
 		return nodes, err
 	}
 
-	if err != nil {
-		fmt.Println(err)
+	//访问密钥出错
+	if res == "{\"code\":-1,\"msg\":\"Secret key matching error\"}" {
+		log.Fatal("Secret key matching error")
 	}
 
 	//解析数据到masterMap集合
