@@ -8,6 +8,7 @@ type Consumer struct {
 	Topic      string //消费者所属主题
 	ConsumerId string //消费者Id
 	SecretKey  string //访问密钥
+	CheckTime  int    //连接检查周期（每{CheckTime}秒检查一次连接）
 }
 
 // Producer 生产者配置
@@ -18,6 +19,7 @@ type Producer struct {
 	Topic      string //消费者所属主题
 	ProducerId string //消费者Id
 	SecretKey  string //访问密钥
+	CheckTime  int    //连接检查周期（每{CheckTime}秒检查一次连接）
 }
 
 // ClusterProducer 集群模式下的生产者配置
@@ -29,4 +31,5 @@ type ClusterProducer struct {
 	Topic            string //消费者所属主题
 	ProducerId       string //消费者Id
 	SecretKey        string //访问密钥
+	CheckTime        int    //连接检查周期（每{CheckTime}秒检查一次连接）
 }
