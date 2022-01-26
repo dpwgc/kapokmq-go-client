@@ -48,20 +48,16 @@ func consumerReceiveHandle(secretKey string, client *websocket.Conn) {
 		delete(consumerConn, client)
 		err := client.Close()
 		if err != nil {
-			log.Fatal(err)
+			fmt.Printf("\033[1;31;40m%s\033[0m\n", err)
 		}
 	}(client)
 
 	//验证密钥
 	for {
 		//读取消息队列发送过来的提示
-		messageType, message, err := client.ReadMessage()
+		_, message, err := client.ReadMessage()
 		if err != nil {
 			log.Fatal(err)
-			return
-		}
-		if messageType != 1 {
-			log.Fatal("messageType != 1")
 			return
 		}
 
@@ -79,7 +75,6 @@ func consumerReceiveHandle(secretKey string, client *websocket.Conn) {
 		//访问密钥错误
 		if string(message) == "Secret key matching error" {
 			log.Fatal("Secret key matching error")
-			continue
 		}
 
 		//访问密钥正确
@@ -90,20 +85,16 @@ func consumerReceiveHandle(secretKey string, client *websocket.Conn) {
 
 	//开始监听数据
 	for {
-		messageType, message, err := client.ReadMessage()
+		_, message, err := client.ReadMessage()
 		if err != nil {
-			log.Fatal(err)
-			return
-		}
-		if messageType != 1 {
-			log.Fatal("messageType != 1")
+			fmt.Printf("\033[1;31;40m%s\033[0m\n", err)
 			return
 		}
 
 		//解析消息
 		msg, err := utils.JsonToMessage(string(message))
 		if err != nil {
-			log.Fatal(err)
+			fmt.Printf("\033[1;31;40m%s\033[0m\n", err)
 			return
 		}
 		//将消息通过receiveChan通道发送至ConsumerReceive()函数
@@ -133,7 +124,7 @@ func checkConsumer(consumer conf.Consumer) {
 	//如果连接列表中找不到该连接，则表明该连接已断开，则重新建立连接
 	client, _, err := websocket.DefaultDialer.Dial(wsUrl, nil)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Printf("\033[1;31;40m%s\033[0m\n", err)
 		return
 	}
 	producerConn[client] = wsUrl
