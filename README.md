@@ -10,25 +10,30 @@
 
 ***
 
-### 使用方法
+### 客户端下载
 
-* 引入包：`go get github.com/dpwgc/kapokmq-go-client`
+* Goland终端执行：`go get github.com/dpwgc/kapokmq-go-client`
 
-##### 注：单个Golang项目内：
+***
 
-* 可以创建多个不同Id（ProducerId，ConsumerId）的NewProducerConn()、NewClusterProducerConn()和NewConsumerConn()。
+### 注意事项
 
-* 即可以存在多个生产者、集群生产者和消费者客户端，但是各个生产者/消费者Id要唯一。
+* 单个项目内，可以创建多个不同Id（ProducerId，ConsumerId）的NewProducerConn()、NewClusterProducerConn()和NewConsumerConn()。
 
-##### 不建议在一个项目中创建多个客户端
+* 即单个项目内可以存在多个生产者、集群生产者和消费者客户端，但是各个生产者/消费者Id要唯一。
 
-#### 函数说明
+* 不建议在一个项目中创建多个客户端。
+
+***
+
+### 函数说明
 
 * 消费者客户端接收消息
 
 ```
 // ConsumerReceive 消费者客户端接收消息队列的消息
 // @consumerId: 消费者客户端Id
+
 func ConsumerReceive(consumerId string) model.Message 
 ```
 
@@ -39,16 +44,13 @@ func ConsumerReceive(consumerId string) model.Message
 // @producerId: 生产者客户端Id
 // @messageData: 消息主体（一般为json字符串）
 // @delayTime: 消息延时投送时间（单位：秒），为0时表示非延时消息
+
 func ProducerSend(producerId string, messageData string, delayTime int64) bool 
 ```
 
-#### 单机模式下的生产者客户端
+***
 
-* 生产者客户端先通过WebSocket连接到消息队列，再进行消息发送操作。
-
-* 创建一个生产者与消息队列的WebSocket连接：`NewProducerConn()`
-
-* 发送一条消息（传入string类型，例如Json字符串。还可设定延时投送时间，为0时代表即刻投送）：`ProducerSend()`
+### 依赖导入
 
 ```
 //导入github包
@@ -58,6 +60,18 @@ import (
 	"github.com/dpwgc/kapokmq-go-client/conf"
 )
 ```
+
+***
+
+### 单机模式下的生产者客户端连接 `Producer`
+
+* 一个生产者客户端只能连接一个消息队列。
+
+* 生产者客户端先通过WebSocket连接到消息队列，再进行消息发送操作。
+
+* 创建一个生产者与消息队列的WebSocket连接：`NewProducerConn()`
+
+* 发送一条消息（传入string类型，例如Json字符串。还可设定延时投送时间，为0时代表即刻投送）：`ProducerSend()`
 
 ```
 //创建一个生产者模板
@@ -85,21 +99,19 @@ isOk := conn.ProducerSend(producer.ProducerId, "ok", 0)
 isOk := conn.ProducerSend(producer.ProducerId, "ok", 60)
 ```
 
-#### 集群模式下的生产者客户端
+***
 
-* 集群生产者客户端先通过HTTP请求获取Serena注册中心上的所有消息队列节点信息，再与所有消息队列建立WebSocket连接，随机选取一个消息队列进行发送。
+### 集群模式下的生产者客户端连接 `ClusterProducer`
+
+* 集群生产者客户端可以同时连接多个消息队列节点。
+
+* 集群生产者客户端先通过HTTP请求获取Serena注册中心上的所有消息队列节点信息，再与所有消息队列建立WebSocket连接，随机选取一个消息队列进行消息发送。
+
+* 当有新的消息队列节点加入集群时，检查协程会自动探测到新节点，并让集群生产者客户端与之连接。
 
 * 创建一个集群生产者，与所有消息队列建立WebSocket连接：`NewClusterProducerConn()`
 
 * 发送一条消息（集群模式下该消息将会随机投送给集群中的一个消息队列）：`ProducerSend()`
-
-```
-//导入github包
-import (
-	"fmt"
-	"github.com/dpwgc/kapokmq-go-client/conn"
-)
-```
 
 ```
 //创建一个集群生产者模板
@@ -125,21 +137,17 @@ if err != nil {
 isOk := conn.ProducerSend(producer.ProducerId, "ok", 0)
 ```
 
-#### 消费者客户端
+***
+
+### 消费者客户端连接 `Consumer`
+
+* 一个消费者客户端只能连接一个消息队列。
 
 * 消费者客户端先通过WebSocket连接到消息队列，再进行接收操作。
 
 * 创建一个消费者与消息队列的WebSocket连接：`NewConsumerConn()`
 
 * 接收一条消息：`ConsumerReceive()`
-
-```
-//导入github包
-import (
-	"fmt"
-	"github.com/dpwgc/kapokmq-go-client/conn"
-)
-```
 
 ```
 //创建一个消费者模板
