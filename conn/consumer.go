@@ -135,7 +135,7 @@ func checkConsumer(consumer conf.Consumer) {
 	}
 	producerConn[client] = wsUrl
 	//重新开启连接协程
-	go consumerReceiveHandle(consumer.SecretKey, consumer.Topic, client)
+	go consumerReceiveHandle(consumer.SecretKey, consumer.ConsumerId, client)
 }
 
 // ConsumerReceive 接收指定Topic主题的消息
