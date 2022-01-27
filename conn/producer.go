@@ -12,11 +12,11 @@ import (
 //生产者连接列表
 var producerConn = make(map[*websocket.Conn]string)
 
-//生产者消息发送通道
-var sendChan = make(chan model.SendMessage)
+//生产者消息发送通道列表，key为生产者id（每个通道负责处理一个生产者/集群生产者客户端连接的消息发送）
+var sendChan = make(map[string]chan model.SendMessage)
 
-//消息队列返回消息通道（用于判断消息是否发送成功）
-var resChan = make(chan bool)
+//消息队列返回消息通道列表，用于判断消息是否发送成功，key为生产者id（每个通道负责处理一个消费者客户端连接的消息返回）
+var resChan = make(map[string]chan bool)
 
 // NewProducerConn 创建一个生产者连接
 func NewProducerConn(producer conf.Producer) error {
@@ -29,14 +29,19 @@ func NewProducerConn(producer conf.Producer) error {
 
 	//将websocket连接添加到生产者连接列表
 	producerConn[client] = wsUrl
+	//为这个生产者连接创建一个消息发送通道，并将该通道加入消息发送通道列表
+	sendChan[producer.ProducerId] = make(chan model.SendMessage)
+	//为这个生产者连接创建一个返回消息通道，并将该通道加入消息返回通道列表
+	resChan[producer.ProducerId] = make(chan bool)
+
 	//开启连接协程
-	go producerReceiveHandle(producer.SecretKey, client)
+	go producerReceiveHandle(producer.SecretKey, producer.ProducerId, client)
 
 	//开启连接检查协程
 	go func() {
 		for {
 			checkProducer(producer)
-			fmt.Printf("\033[1;32;40m%s\033[0m\n", "check producer")
+			fmt.Printf("\033[1;32;40m%s%s\033[0m\n", "[check producer] ProducerId: ", producer.ProducerId)
 			time.Sleep(time.Second * time.Duration(producer.CheckTime))
 		}
 	}()
@@ -52,6 +57,11 @@ func NewClusterProducerConn(producer conf.ClusterProducer) error {
 		return err
 	}
 
+	//为这个集群生产者连接创建一个消息发送通道，并将该通道加入消息发送通道列表
+	sendChan[producer.ProducerId] = make(chan model.SendMessage)
+	//为这个集群生产者连接创建一个返回消息通道，并将该通道加入消息返回通道列表
+	resChan[producer.ProducerId] = make(chan bool)
+
 	//生产者与所有消息队列节点建立websocket连接
 	for _, node := range nodes {
 		wsUrl := fmt.Sprintf("%s://%s:%s%s%s/%s", producer.MqProtocol, node.Addr, node.Port, "/Producers/Conn/", producer.Topic, producer.ProducerId)
@@ -61,14 +71,14 @@ func NewClusterProducerConn(producer conf.ClusterProducer) error {
 		}
 		producerConn[client] = wsUrl
 		//循环开启多个连接协程
-		go producerReceiveHandle(producer.SecretKey, client)
+		go producerReceiveHandle(producer.SecretKey, producer.ProducerId, client)
 	}
 
 	//开启连接检查协程
 	go func() {
 		for {
 			checkClusterProducer(producer)
-			fmt.Printf("\033[1;32;40m%s\033[0m\n", "check cluster producer")
+			fmt.Printf("\033[1;32;40m%s%s\033[0m\n", "[check cluster producer] ProducerId: ", producer.ProducerId)
 			time.Sleep(time.Second * time.Duration(producer.CheckTime))
 		}
 	}()
@@ -77,7 +87,7 @@ func NewClusterProducerConn(producer conf.ClusterProducer) error {
 }
 
 // producerReceiveHandle 消息发送句柄
-func producerReceiveHandle(secretKey string, client *websocket.Conn) {
+func producerReceiveHandle(secretKey string, producerId string, client *websocket.Conn) {
 	defer func(client *websocket.Conn) {
 		//从生产者连接列表中删除该连接
 		delete(producerConn, client)
@@ -121,16 +131,16 @@ func producerReceiveHandle(secretKey string, client *websocket.Conn) {
 	//开始发送数据
 	for {
 		//从sendChan通道中获取要发送给消息队列的数据
-		sendMessage := <-sendChan
+		sendMessage := <-sendChan[producerId]
 		err := client.WriteJSON(sendMessage)
 		if err != nil {
 			fmt.Printf("\033[1;31;40m%s\033[0m\n", err)
 			//插入发送失败标识到resChan通道
-			resChan <- false
+			resChan[producerId] <- false
 			return
 		}
 		//插入发送成功标识到resChan通道
-		resChan <- true
+		resChan[producerId] <- true
 	}
 }
 
@@ -161,7 +171,7 @@ func checkProducer(producer conf.Producer) {
 	}
 	producerConn[client] = wsUrl
 	//重新开启该连接协程
-	go producerReceiveHandle(producer.SecretKey, client)
+	go producerReceiveHandle(producer.SecretKey, producer.Topic, client)
 }
 
 //集群模式下的生产者检查与重连
@@ -198,17 +208,17 @@ func checkClusterProducer(producer conf.ClusterProducer) {
 		}
 		producerConn[client] = wsUrl
 		//开启该连接协程
-		go producerReceiveHandle(producer.SecretKey, client)
+		go producerReceiveHandle(producer.SecretKey, producer.Topic, client)
 	}
 }
 
 // ProducerSend 发送消息
-func ProducerSend(messageData string, delayTime int64) bool {
+func ProducerSend(producerId string, messageData string, delayTime int64) bool {
 	sendMessage := model.SendMessage{}
 	sendMessage.MessageData = messageData
 	sendMessage.DelayTime = delayTime
 	//向sendChan通道发送消息
-	sendChan <- sendMessage
+	sendChan[producerId] <- sendMessage
 	//查看消息发送情况
-	return <-resChan
+	return <-resChan[producerId]
 }
