@@ -13,8 +13,8 @@ import (
 //消费者连接列表
 var consumerConn = make(map[*websocket.Conn]string)
 
-//接收消息的通道
-var receiveChan = make(chan model.Message)
+//接收消息的通道列表，key为消费者id（每个通道都负责接收一个消费者客户端连接的消息）
+var receiveChan = make(map[string]chan model.Message)
 
 // NewConsumerConn 创建一个消费者连接
 func NewConsumerConn(consumer conf.Consumer) error {
@@ -27,22 +27,27 @@ func NewConsumerConn(consumer conf.Consumer) error {
 
 	//将websocket连接添加到消费者连接列表
 	consumerConn[client] = wsUrl
+	//为这个消费者连接创建一个通道，并将该通道加入通道列表
+	receiveChan[consumer.ConsumerId] = make(chan model.Message)
+
 	//开启连接协程
-	go consumerReceiveHandle(consumer.SecretKey, client)
+	go consumerReceiveHandle(consumer.SecretKey, consumer.ConsumerId, client)
 
 	//开启连接检查协程
 	go func() {
 		for {
 			checkConsumer(consumer)
-			fmt.Printf("\033[1;32;40m%s\033[0m\n", "check consumer")
+			fmt.Printf("\033[1;32;40m%s%s\033[0m\n", "[check consumer] ConsumerId: ", consumer.ConsumerId)
 			time.Sleep(time.Second * time.Duration(consumer.CheckTime))
 		}
 	}()
+
 	return nil
 }
 
 // receiveHandle 消息接收句柄
-func consumerReceiveHandle(secretKey string, client *websocket.Conn) {
+func consumerReceiveHandle(secretKey string, consumerId string, client *websocket.Conn) {
+
 	defer func(client *websocket.Conn) {
 		//删除该消费者连接记录
 		delete(consumerConn, client)
@@ -97,8 +102,9 @@ func consumerReceiveHandle(secretKey string, client *websocket.Conn) {
 			fmt.Printf("\033[1;31;40m%s\033[0m\n", err)
 			return
 		}
+
 		//将消息通过receiveChan通道发送至ConsumerReceive()函数
-		receiveChan <- msg
+		receiveChan[consumerId] <- msg
 	}
 }
 
@@ -129,13 +135,14 @@ func checkConsumer(consumer conf.Consumer) {
 	}
 	producerConn[client] = wsUrl
 	//重新开启连接协程
-	go consumerReceiveHandle(consumer.SecretKey, client)
+	go consumerReceiveHandle(consumer.SecretKey, consumer.Topic, client)
 }
 
-// ConsumerReceive 接收消息
-func ConsumerReceive() model.Message {
+// ConsumerReceive 接收指定Topic主题的消息
+func ConsumerReceive(consumerId string) model.Message {
+
 	//读取receiveChan通道中的消息并返回
-	message := <-receiveChan
+	message := <-receiveChan[consumerId]
 	message.Status = 1
 	message.ConsumedTime = utils.GetLocalDateTimestamp()
 	return message
