@@ -171,7 +171,7 @@ func checkProducer(producer conf.Producer) {
 	}
 	producerConn[client] = wsUrl
 	//重新开启该连接协程
-	go producerReceiveHandle(producer.SecretKey, producer.Topic, client)
+	go producerReceiveHandle(producer.SecretKey, producer.ProducerId, client)
 }
 
 //集群模式下的生产者检查与重连
@@ -208,7 +208,7 @@ func checkClusterProducer(producer conf.ClusterProducer) {
 		}
 		producerConn[client] = wsUrl
 		//开启该连接协程
-		go producerReceiveHandle(producer.SecretKey, producer.Topic, client)
+		go producerReceiveHandle(producer.SecretKey, producer.ProducerId, client)
 	}
 }
 
