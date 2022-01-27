@@ -13,11 +13,33 @@
 ### 使用方法
 
 * 引入包：`go get github.com/dpwgc/kapokmq-go-client`
+
+##### 注：单个Golang项目内：
+
+* 可以创建多个不同Id（ProducerId，ConsumerId）的NewProducerConn()、NewClusterProducerConn()和NewConsumerConn()。
+
+* 即可以存在多个生产者、集群生产者和消费者客户端，但是各个生产者/消费者Id要唯一。
+
+##### 不建议在一个项目中创建多个客户端
+
+#### 函数说明
+
+* 消费者客户端接收消息
+
 ```
-注：单个Golang项目内：
-只能存在一个NewProducerConn()或NewClusterProducerConn()。
-只能存在一个NewConsumerConn()。
-即一个项目(Gin、Beego等)中只能创建一个生产者客户端和一个消费者客户端。
+// ConsumerReceive 消费者客户端接收消息队列的消息
+// @consumerId: 消费者客户端Id
+func ConsumerReceive(consumerId string) model.Message 
+```
+
+* 生产者客户端发送消息
+
+```
+// ProducerSend 生产者客户端发送消息到消息队列
+// @producerId: 生产者客户端Id
+// @messageData: 消息主体（一般为json字符串）
+// @delayTime: 消息延时投送时间（单位：秒），为0时表示非延时消息
+func ProducerSend(producerId string, messageData string, delayTime int64) bool 
 ```
 
 #### 单机模式下的生产者客户端
@@ -38,29 +60,29 @@ import (
 ```
 
 ```
-//创建生产者模板
+//创建一个生产者模板
 producer := conf.Producer{
     MqAddr:      "0.0.0.0",    //消息队列服务IP地址
     MqPort:      "8011",       //消息队列服务端口号
     MqProtocol:  "ws",         //消息队列连接协议：ws/wss
     Topic:       "test_topic", //生产者订阅的主题
-    ProducerId:  "1",          //生产者Id
+    ProducerId:  "P1",         //生产者Id（不得重复）
     SecretKey:   "test",       //消息队列访问密钥
-    CheckTime:   3,            //连接检查周期（每{CheckTime}秒检查一次连接）
+    CheckTime:   10,           //连接检查周期（每{CheckTime}秒检查一次连接）
 }
 
-//生产者与消息队列建立连接
+//让该生产者与消息队列建立连接
 err := conn.NewProducerConn(producer)
     if err != nil {
     fmt.Println(err)
     return
 }
 
-//发送消息
-isOk := conn.ProducerSend("ok", 0)
+//发送消息（使用指定生产者客户端发送消息，消息内容为“ok”，消息不延时投送）
+isOk := conn.ProducerSend(producer.ProducerId, "ok", 0)
 
 //发送延时消息（延时60秒推送到消费者客户端）
-isOk := conn.ProducerSend("ok", 60)
+isOk := conn.ProducerSend(producer.ProducerId, "ok", 60)
 ```
 
 #### 集群模式下的生产者客户端
@@ -80,26 +102,27 @@ import (
 ```
 
 ```
+//创建一个集群生产者模板
 producer := conf.ClusterProducer{
 	RegistryAddr:     "0.0.0.0",    //注册中心的IP地址
 	RegistryPort:     "8031",       //注册中心的Gin HTTP服务端口号
 	RegistryProtocol: "http",       //注册中心的连接协议：http/https
 	MqProtocol:       "ws",         //消息队列的连接协议：ws/wss
 	Topic:            "test_topic", //生产者订阅的主题
-	ProducerId:       "1",          //生产者Id
+	ProducerId:       "CP1",        //生产者Id（不得重复）
 	SecretKey:        "test",       //消息队列访问密钥
-	CheckTime:        3,            //连接检查周期（每{CheckTime}秒检查一次连接）
+	CheckTime:        10,           //连接检查周期（每{CheckTime}秒检查一次连接）
 }
 
-//生产者与消息队列建立连接
+//让该集群生产者与消息队列建立连接
 err := conn.NewClusterProducerConn(producer)
 if err != nil {
 	fmt.Println(err)
 	return
 }
 
-//发送消息
-isOk := conn.ProducerSend("ok", 0)
+//使用该集群生产者客户端发送消息
+isOk := conn.ProducerSend(producer.ProducerId, "ok", 0)
 ```
 
 #### 消费者客户端
@@ -119,17 +142,18 @@ import (
 ```
 
 ```
+//创建一个消费者模板
 consumer := conf.Consumer{
 	MqAddr:     "0.0.0.0",   //消息队列服务IP地址
 	MqPort:     "8011",      //消息队列服务端口号
 	MqProtocol: "ws",        //消息队列连接协议：ws/wss
 	Topic:      "test_topic",//消费者订阅的主题
-	ConsumerId: "1",         //消费者Id   
+	ConsumerId: "C1",        //消费者Id（不得重复）
 	SecretKey:  "test",      //消息队列访问密钥
-	CheckTime:  3,           //连接检查周期（每{CheckTime}秒检查一次连接）
+	CheckTime:  10,          //连接检查周期（每{CheckTime}秒检查一次连接）
 }
 
-//消费者与消息队列建立连接
+//让该消费者与消息队列建立连接
 err := conn.NewConsumerConn(consumer)
 if err != nil {
 	fmt.Println(err)
@@ -139,8 +163,8 @@ if err != nil {
 //消费者监听消息队列
 go func() {
 	for {
-		//接收消息队列推送过来的消息msg
-		msg := conn.ConsumerReceive()
+		//接收消息队列推送给该客户端的消息msg
+		msg := conn.ConsumerReceive(consumer.ConsumerId)
 		fmt.Println(msg)
 	}
 }()
