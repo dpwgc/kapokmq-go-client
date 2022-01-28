@@ -14,7 +14,7 @@ type Message struct {
 	CreateTime   int64  //消息创建时间
 	DelayTime    int64  //延迟推送时间
 	ConsumedTime int64  //消息被消费时间
-	Status       int    //消息状态（-1：未消费。0：消费失败。1：已消费）
+	Status       int    //消息状态（-1：未消费。0：未到推送时间的延时消息。1：已消费）
 }
 
 // Node 消息队列服务节点结构体
