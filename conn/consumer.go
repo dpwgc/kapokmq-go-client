@@ -45,7 +45,7 @@ func NewConsumerConn(consumer conf.Consumer) error {
 	return nil
 }
 
-// receiveHandle 消息接收句柄
+// consumerReceiveHandle 消息接收句柄
 func consumerReceiveHandle(secretKey string, consumerId string, client *websocket.Conn) {
 
 	defer func(client *websocket.Conn) {
@@ -105,6 +105,13 @@ func consumerReceiveHandle(secretKey string, consumerId string, client *websocke
 
 		//将消息通过receiveChan通道发送至ConsumerReceive()函数
 		receiveChan[consumerId] <- msg
+
+		//向消息队列服务端发送ACK确认消费
+		err = client.WriteMessage(1, []byte(msg.MessageCode))
+		if err != nil {
+			fmt.Printf("\033[1;31;40m%s\033[0m\n", err)
+			return
+		}
 	}
 }
 
