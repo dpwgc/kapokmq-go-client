@@ -35,7 +35,7 @@ func NewProducerConn(producer conf.Producer) error {
 	resChan[producer.ProducerId] = make(chan bool)
 
 	//开启连接协程
-	go producerReceiveHandle(producer.SecretKey, producer.ProducerId, client)
+	go producerSendHandle(producer.SecretKey, producer.ProducerId, client)
 
 	//开启连接检查协程
 	go func() {
@@ -71,7 +71,7 @@ func NewClusterProducerConn(producer conf.ClusterProducer) error {
 		}
 		producerConn[client] = wsUrl
 		//循环开启多个连接协程
-		go producerReceiveHandle(producer.SecretKey, producer.ProducerId, client)
+		go producerSendHandle(producer.SecretKey, producer.ProducerId, client)
 	}
 
 	//开启连接检查协程
@@ -86,8 +86,8 @@ func NewClusterProducerConn(producer conf.ClusterProducer) error {
 	return nil
 }
 
-// producerReceiveHandle 消息发送句柄
-func producerReceiveHandle(secretKey string, producerId string, client *websocket.Conn) {
+// producerSendHandle 消息发送句柄
+func producerSendHandle(secretKey string, producerId string, client *websocket.Conn) {
 	defer func(client *websocket.Conn) {
 		//从生产者连接列表中删除该连接
 		delete(producerConn, client)
@@ -171,7 +171,7 @@ func checkProducer(producer conf.Producer) {
 	}
 	producerConn[client] = wsUrl
 	//重新开启该连接协程
-	go producerReceiveHandle(producer.SecretKey, producer.ProducerId, client)
+	go producerSendHandle(producer.SecretKey, producer.ProducerId, client)
 }
 
 //集群模式下的生产者检查与重连
@@ -208,7 +208,7 @@ func checkClusterProducer(producer conf.ClusterProducer) {
 		}
 		producerConn[client] = wsUrl
 		//开启该连接协程
-		go producerReceiveHandle(producer.SecretKey, producer.ProducerId, client)
+		go producerSendHandle(producer.SecretKey, producer.ProducerId, client)
 	}
 }
 
