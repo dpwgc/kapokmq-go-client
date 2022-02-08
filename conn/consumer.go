@@ -154,3 +154,8 @@ func ConsumerReceive(consumerId string) model.Message {
 	message.ConsumedTime = utils.GetLocalDateTimestamp()
 	return message
 }
+
+// ConsumeAck 发送确认消费ACK
+func ConsumeAck() {
+
+}
