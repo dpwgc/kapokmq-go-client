@@ -15,8 +15,11 @@ var producerConn = make(map[*websocket.Conn]string)
 //生产者消息发送通道列表，key为生产者id（每个通道负责处理一个生产者/集群生产者客户端连接的消息发送）
 var sendChan = make(map[string]chan model.SendMessage)
 
-//消息队列返回消息通道列表，用于判断消息是否发送成功，key为生产者id（每个通道负责处理一个消费者客户端连接的消息返回）
+//消息发送反馈通道列表，用于接收websocket消息发送结果，判断消息是否成功发送，key为生产者id（每个通道负责处理一个生产者客户端连接的消息发送反馈）
 var resChan = make(map[string]chan bool)
+
+//消息队列ACK通道列表，用于接收消息队列发来的确认接收ACK，判断消息是否已被消息队列接收，key为生产者id（每个通道负责处理一个生产者客户端连接的ACK信息）
+var ackChan = make(map[string]chan bool)
 
 // NewProducerConn 创建一个生产者连接
 func NewProducerConn(producer conf.Producer) error {
