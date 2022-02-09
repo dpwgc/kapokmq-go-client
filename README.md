@@ -73,6 +73,7 @@ import (
 
 * 发送一条消息（传入string类型，例如Json字符串。还可设定延时投送时间，为0时代表即刻投送）：`ProducerSend()`
 
+* 获取消息队列的确认ACK，用于确保消息成功写入WAL日志，一般情况下无需使用：`ProducerAck()`
 ```
 //创建一个生产者模板
 producer := conf.Producer{
@@ -97,6 +98,13 @@ isOk := conn.ProducerSend(producer.ProducerId, "ok", 0)
 
 //发送延时消息（延时60秒推送到消费者客户端）
 isOk := conn.ProducerSend(producer.ProducerId, "ok", 60)
+
+//顺序同步发送消息：每发送一条消息都通过ProducerAck()接收消息队列发来的ACK
+//接收到消息队列ACK后再发送下一条消息，确保每条消息都成功写入消息队列的WAL日志
+isOk := conn.ProducerSend(producer.ProducerId, "ok", 0)
+ackOk := conn.ProducerAck(producer.ProducerId)
+//发送下一条消息
+...
 ```
 
 ***
@@ -149,6 +157,8 @@ isOk := conn.ProducerSend(producer.ProducerId, "ok", 0)
 
 * 接收一条消息：`ConsumerReceive()`
 
+* 向消息队列发送确认消费ACK：`ConsumeAck()`
+
 ```
 //创建一个消费者模板
 consumer := conf.Consumer{
@@ -174,6 +184,13 @@ go func() {
 		//接收消息队列推送给该客户端的消息msg
 		msg := conn.ConsumerReceive(consumer.ConsumerId)
 		fmt.Println(msg)
+		
+		/*
+		    消息处理
+		*/
+		
+		//处理完后向消息队列发送确认消费ACK
+		conn.ConsumeAck(consumer.ConsumerId,msg.MessageCode)
 	}
 }()
 ```
