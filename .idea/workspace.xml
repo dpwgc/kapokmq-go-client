@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="87b33b4b-0a0f-4beb-8189-c5e47d9c951e" name="Changes" comment="生产者连接更新">
+    <list default="true" id="87b33b4b-0a0f-4beb-8189-c5e47d9c951e" name="Changes" comment="文档更新">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/conn/consumer.go" beforeDir="false" afterPath="$PROJECT_DIR$/conn/consumer.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/conn/producer.go" beforeDir="false" afterPath="$PROJECT_DIR$/conn/producer.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -43,7 +42,7 @@
     <property name="go.import.settings.migrated" value="true" />
     <property name="go.modules.go.list.on.any.changes.was.set" value="true" />
     <property name="go.sdk.automatically.set" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../kapokmq" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -52,14 +51,6 @@
     </key>
   </component>
   <component name="RunManager" selected="Go Build.go build main.go">
-    <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
-      <module name="kapokmq-go-client" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="FILE" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <method v="2" />
-    </configuration>
     <configuration name="go build main.go" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
       <module name="kapokmq-go-client" />
       <working_directory value="$PROJECT_DIR$" />
@@ -76,15 +67,6 @@
       <package value="kapokmq-go-client" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$/test.go" />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
-      <module name="kapokmq-go-client" />
-      <working_directory value="$PROJECT_DIR$" />
-      <kind value="DIRECTORY" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <framework value="gotest" />
       <method v="2" />
     </configuration>
     <recent_temporary>
@@ -111,7 +93,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="测试文件" />
     <MESSAGE value="生产者接口纠错" />
     <MESSAGE value="修改生产者发送消息模板" />
     <MESSAGE value="生产者连接" />
@@ -126,7 +107,6 @@
     <MESSAGE value="http请求工具" />
     <MESSAGE value="消费者客户端连接优化" />
     <MESSAGE value="生产者客户端连接优化" />
-    <MESSAGE value="文档更新" />
     <MESSAGE value="消费者客户端连接-优化" />
     <MESSAGE value="生产者客户端连接-优化" />
     <MESSAGE value="消费者客户端连接-添加ACK确认消费机制" />
@@ -136,7 +116,9 @@
     <MESSAGE value="消费者更新" />
     <MESSAGE value="消费者连接更新" />
     <MESSAGE value="生产者连接更新" />
-    <option name="LAST_COMMIT_MESSAGE" value="生产者连接更新" />
+    <MESSAGE value="添加ACK机制" />
+    <MESSAGE value="文档更新" />
+    <option name="LAST_COMMIT_MESSAGE" value="文档更新" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>

@@ -34,7 +34,18 @@
 // ConsumerReceive 消费者客户端接收消息队列的消息
 // @consumerId: 消费者客户端Id
 
-func ConsumerReceive(consumerId string) model.Message 
+ConsumerReceive(consumerId string) model.Message 
+```
+
+* 消费者客户端向消息队列发送确认消费ACK
+（消费者客户端每处理完一条消息都要向消息队列发送ACK）
+
+```
+// ConsumeAck 消费者发送确认消费ACK
+// @consumerId: 消费者客户端Id
+// @messageCode: 消息唯一标识码
+
+ConsumeAck(consumerId string, messageCode string)
 ```
 
 * 生产者客户端发送消息
@@ -45,7 +56,28 @@ func ConsumerReceive(consumerId string) model.Message
 // @messageData: 消息主体（一般为json字符串）
 // @delayTime: 消息延时投送时间（单位：秒），为0时表示非延时消息
 
-func ProducerSend(producerId string, messageData string, delayTime int64) bool 
+ProducerSend(producerId string, messageData string, delayTime int64) bool 
+```
+
+* 生产者客户端接收消息队列发来的确认接收ACK
+（一般用于同步顺序发送场景，确保消息被写入WAL预写日志。如果消息队列没有开启WAL预写功能，则生产者客户端可以忽略此ACK消息）
+
+```
+// ProducerAck 生产者客户端接收消息队列的ACK
+// @producerId: 生产者客户端Id
+
+ProducerAck(producerId string) bool
+```
+
+* 获取集群内的消息队列节点列表（如果不想使用自带的集群生产者负载均衡功能，可以通过此函数获取集群节点列表，自行编写负载均衡功能）
+```
+// GetNodes 获取消息队列服务节点列表
+// @protocol 注册中心的网络协议:http/https
+// @addr 注册中心的IP地址
+// @port 注册中心的http服务端口号
+// @secretKey 注册中心与消息队列的安全访问密钥
+
+GetNodes(protocol string, addr string, port string, secretKey string) ([]model.Node, error)
 ```
 
 ***
@@ -101,10 +133,12 @@ isOk := conn.ProducerSend(producer.ProducerId, "ok", 60)
 
 //顺序同步发送消息：每发送一条消息都通过ProducerAck()接收消息队列发来的ACK
 //接收到消息队列ACK后再发送下一条消息，确保每条消息都成功写入消息队列的WAL日志
-isOk := conn.ProducerSend(producer.ProducerId, "ok", 0)
-ackOk := conn.ProducerAck(producer.ProducerId)
-//发送下一条消息
-...
+for {
+    isOk := conn.ProducerSend(producer.ProducerId, "ok", 0)
+    ackOk := conn.ProducerAck(producer.ProducerId)
+    //发送下一条消息
+    //...
+}
 ```
 
 ***
