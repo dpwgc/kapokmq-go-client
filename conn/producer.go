@@ -18,8 +18,8 @@ var sendChan = make(map[string]chan model.SendMessage)
 //消息发送反馈通道列表，用于接收websocket消息发送结果，判断消息是否成功发送，key为生产者id（每个通道负责处理一个生产者客户端连接的消息发送反馈）
 var resChan = make(map[string]chan bool)
 
-//消息队列ACK通道列表，用于接收消息队列发来的确认接收ACK，判断消息是否已被消息队列接收，key为生产者id（每个通道负责处理一个生产者客户端连接的ACK信息）
-var ackChan = make(map[string]chan bool)
+//消息队列ACK通道列表，用于接收消息队列发来的确认接收ACK，判断消息是否已被消息队列接收，key为生产者id（每个通道负责处理一个生产者客户端连接的ACK信息接收）
+var getAckChan = make(map[string]chan string)
 
 // NewProducerConn 创建一个生产者连接
 func NewProducerConn(producer conf.Producer) error {
@@ -36,6 +36,8 @@ func NewProducerConn(producer conf.Producer) error {
 	sendChan[producer.ProducerId] = make(chan model.SendMessage)
 	//为这个生产者连接创建一个返回消息通道，并将该通道加入消息返回通道列表
 	resChan[producer.ProducerId] = make(chan bool)
+	//为这个生产者建立一个消息队列ACK接收通道
+	getAckChan[producer.ProducerId] = make(chan string)
 
 	//开启连接协程
 	go producerSendHandle(producer.SecretKey, producer.ProducerId, client)
@@ -131,6 +133,26 @@ func producerSendHandle(secretKey string, producerId string, client *websocket.C
 		}
 	}
 
+	//接收消息队列发送过来的ACK
+	go func() {
+		for {
+			//读取消息队列发送过来的消息
+			_, ack, err := client.ReadMessage()
+			if err != nil {
+				fmt.Printf("\033[1;31;40m%s\033[0m\n", err)
+				//从生产者连接列表中删除该连接
+				delete(producerConn, client)
+				err = client.Close()
+				if err != nil {
+					log.Fatal(err)
+				}
+				return
+			}
+			//接收ACK
+			getAckChan[producerId] <- string(ack)
+		}
+	}()
+
 	//开始发送数据
 	for {
 		//从sendChan通道中获取要发送给消息队列的数据
@@ -224,4 +246,13 @@ func ProducerSend(producerId string, messageData string, delayTime int64) bool {
 	sendChan[producerId] <- sendMessage
 	//查看消息发送情况
 	return <-resChan[producerId]
+}
+
+// ProducerAck 生产者客户端接收消息队列的ACK
+func ProducerAck(producerId string) bool {
+	ack := <-getAckChan[producerId]
+	if ack == "ok" {
+		return true
+	}
+	return false
 }

@@ -16,6 +16,9 @@ var consumerConn = make(map[*websocket.Conn]string)
 //接收消息的通道列表，key为消费者id（每个通道都负责接收一个消费者客户端连接的消息）
 var receiveChan = make(map[string]chan model.Message)
 
+//消费者ACK通道列表，用于向消息队列发送确认接收ACK，key为消费者id（每个通道负责处理一个消费者客户端连接的ACK信息发送）
+var setAckChan = make(map[string]chan string)
+
 // NewConsumerConn 创建一个消费者连接
 func NewConsumerConn(consumer conf.Consumer) error {
 
@@ -29,6 +32,8 @@ func NewConsumerConn(consumer conf.Consumer) error {
 	consumerConn[client] = wsUrl
 	//为这个消费者连接创建一个通道，并将该通道加入通道列表
 	receiveChan[consumer.ConsumerId] = make(chan model.Message)
+	//为消费者客户端建立一个ACK发送通道
+	setAckChan[consumer.ConsumerId] = make(chan string)
 
 	//开启连接协程
 	go consumerReceiveHandle(consumer.SecretKey, consumer.ConsumerId, client)
@@ -106,12 +111,16 @@ func consumerReceiveHandle(secretKey string, consumerId string, client *websocke
 		//将消息通过receiveChan通道发送至ConsumerReceive()函数
 		receiveChan[consumerId] <- msg
 
-		//向消息队列服务端发送ACK确认消费
-		err = client.WriteMessage(1, []byte(msg.MessageCode))
+		//期间等待消费者发送ACK
+
+		//从ConsumeAck()函数接收消息ACK，向消息队列服务端发送ACK确认消费
+		ack := <-setAckChan[consumerId]
+		err = client.WriteMessage(1, []byte(ack))
 		if err != nil {
 			fmt.Printf("\033[1;31;40m%s\033[0m\n", err)
 			return
 		}
+		//消费下一条消息
 	}
 }
 
@@ -155,7 +164,7 @@ func ConsumerReceive(consumerId string) model.Message {
 	return message
 }
 
-// ConsumeAck 发送确认消费ACK
-func ConsumeAck() {
-
+// ConsumeAck 消费者发送确认消费ACK
+func ConsumeAck(consumerId string, messageCode string) {
+	setAckChan[consumerId] <- messageCode
 }
