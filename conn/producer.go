@@ -144,7 +144,7 @@ func producerSendHandle(secretKey string, producerId string, client *websocket.C
 				delete(producerConn, client)
 				err = client.Close()
 				if err != nil {
-					log.Fatal(err)
+					fmt.Printf("\033[1;31;40m%s\033[0m\n", err)
 				}
 				return
 			}
